@@ -150,13 +150,17 @@ export default function HomePage() {
   };
 
   const handlePrevBoard = () => {
-    setAutoRotate(false);
     setCurrentBoardIndex((prev) => (prev - 1 + boards.length) % boards.length);
+    // Pause auto-rotation temporarily, then resume after 30 seconds
+    setAutoRotate(false);
+    setTimeout(() => setAutoRotate(true), 30000);
   };
 
   const handleNextBoard = () => {
-    setAutoRotate(false);
     setCurrentBoardIndex((prev) => (prev + 1) % boards.length);
+    // Pause auto-rotation temporarily, then resume after 30 seconds
+    setAutoRotate(false);
+    setTimeout(() => setAutoRotate(true), 30000);
   };
 
   const getCurrentPotentialWinner = (board: Board, game: GameData) => {
