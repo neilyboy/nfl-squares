@@ -106,16 +106,8 @@ export function SquaresGrid({
 
   const getPaymentIcon = (paymentMethod: string | null) => {
     if (!paymentMethod) return null;
-    
-    switch (paymentMethod.toLowerCase()) {
-      case 'paypal':
-        return '💳';
-        return '💵';
-      case 'cash':
-        return '💰';
-      default:
-        return '💳';
-    }
+    // Simple dollar bill emoji for all paid squares
+    return '💵';
   };
 
   return (
