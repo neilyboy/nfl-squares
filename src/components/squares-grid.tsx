@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useResponsive } from '@/lib/use-responsive';
 
 interface Square {
   id: string;
@@ -48,6 +49,22 @@ export function SquaresGrid({
   onModalStateChange,
 }: SquaresGridProps) {
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
+  const { isMobile, isTablet } = useResponsive();
+
+  // Calculate responsive grid size
+  const getGridSize = () => {
+    if (isMobile) {
+      // Mobile: use viewport width minus padding
+      const vw = typeof window !== 'undefined' ? window.innerWidth : 360;
+      return Math.min(vw - 32, 360); // Max 360px on mobile
+    }
+    if (isTablet) {
+      return 480; // Medium size for tablets
+    }
+    return 640; // Full size for desktop
+  };
+
+  const gridSize = getGridSize();
 
   // Notify parent when modal state changes
   React.useEffect(() => {
@@ -111,7 +128,14 @@ export function SquaresGrid({
   };
 
   return (
-    <div style={{ width: '640px', height: '640px' }} className="mx-auto">
+    <div 
+      style={{ 
+        width: `${gridSize}px`, 
+        height: `${gridSize}px`,
+        maxWidth: '100%',
+      }} 
+      className="mx-auto"
+    >
       <div className="grid grid-cols-11 gap-0.5 text-xs h-full" style={{ gridTemplateRows: 'repeat(11, 1fr)' }}>
         {/* Top-left corner cell */}
         <div className="aspect-square flex items-center justify-center bg-secondary/50 border border-border rounded-tl-lg">
@@ -165,11 +189,17 @@ export function SquaresGrid({
                 >
                   {taken && square && (
                     <div className="flex flex-col items-center justify-center text-center w-full h-full cursor-pointer hover:bg-secondary/80 transition-colors">
-                      <div className="font-bold text-sm">
+                      <div className={cn(
+                        "font-bold",
+                        isMobile ? "text-xs" : "text-sm"
+                      )}>
                         {getInitials(square.playerName!)}
                       </div>
                       {square.isPaid && (
-                        <div className="text-xs mt-0.5">
+                        <div className={cn(
+                          "mt-0.5",
+                          isMobile ? "text-[8px]" : "text-xs"
+                        )}>
                           {getPaymentIcon(square.paymentMethod)}
                         </div>
                       )}

@@ -4,6 +4,7 @@ import React from 'react';
 import { SquaresGrid } from '@/components/squares-grid';
 import { getTeamColors, getTeamLogo, getTeamWordmark } from '@/lib/team-colors';
 import { formatCurrency, getLastDigit } from '@/lib/utils';
+import { useResponsive } from '@/lib/use-responsive';
 
 interface GameData {
   homeTeam: {
@@ -54,6 +55,7 @@ interface BoardViewProps {
 export function BoardView({ board, gameData, potentialWinner, onModalStateChange }: BoardViewProps) {
   if (!gameData) return null;
 
+  const { isMobile, isTablet } = useResponsive();
   const homeColors = getTeamColors(gameData.homeTeam.displayName);
   const awayColors = getTeamColors(gameData.awayTeam.displayName);
   const totalPot = board.costPerSquare * 100;
@@ -70,23 +72,23 @@ export function BoardView({ board, gameData, potentialWinner, onModalStateChange
           text-orientation: upright;
         }
       `}</style>
-    <div className="h-screen w-screen overflow-hidden bg-background flex flex-col">
+    <div className={`h-screen w-screen overflow-hidden bg-background flex flex-col ${isMobile ? 'overflow-y-auto' : ''}`}>
       {/* Top: Board Name & Total Pot */}
-      <div className="bg-card border-b border-border px-4 py-2">
+      <div className="bg-card border-b border-border px-2 md:px-4 py-2">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold">{board.name}</h1>
-          <div className="text-lg font-semibold">
+          <h1 className="text-sm md:text-xl font-bold truncate">{board.name}</h1>
+          <div className="text-xs md:text-lg font-semibold whitespace-nowrap ml-2">
             Total Pot: {formatCurrency(totalPot)}
           </div>
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className={`flex-1 flex ${isMobile ? 'flex-col' : 'flex-row'} overflow-hidden`}>
         {/* Center: Grid with Team Labels */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className={`flex-1 flex flex-col ${isMobile ? 'overflow-y-auto' : 'overflow-hidden'}`}>
           {/* Team Color Bars with Scores and Logos */}
-          <div className="flex h-24 relative gap-4 px-4 pt-2">
+          <div className={`flex ${isMobile ? 'h-16' : isTablet ? 'h-20' : 'h-24'} relative ${isMobile ? 'gap-2 px-2' : 'gap-4 px-4'} pt-2`}>
             {/* Away Team Bar with gradient */}
             <div
               className="flex-1 flex items-center justify-center relative rounded-l-2xl rounded-tr-2xl"
@@ -95,24 +97,36 @@ export function BoardView({ board, gameData, potentialWinner, onModalStateChange
               }}
             >
               {/* Large Logo Overlapping */}
-              <div className="absolute left-8 bottom-0 transform translate-y-1/4 z-10">
-                <img
-                  src={getTeamLogo(gameData.awayTeam.displayName)}
-                  alt={gameData.awayTeam.displayName}
-                  width={120}
-                  height={120}
-                  className="object-contain drop-shadow-2xl"
-                  style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}
-                />
-              </div>
-              <div className="flex items-center gap-8">
+              {!isMobile && (
+                <div className={`absolute ${isTablet ? 'left-4' : 'left-8'} bottom-0 transform translate-y-1/4 z-10`}>
+                  <img
+                    src={getTeamLogo(gameData.awayTeam.displayName)}
+                    alt={gameData.awayTeam.displayName}
+                    width={isTablet ? 80 : 120}
+                    height={isTablet ? 80 : 120}
+                    className="object-contain drop-shadow-2xl"
+                    style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-2 md:gap-8">
+                {/* Logo for mobile */}
+                {isMobile && (
+                  <img
+                    src={getTeamLogo(gameData.awayTeam.displayName)}
+                    alt={gameData.awayTeam.displayName}
+                    width={40}
+                    height={40}
+                    className="object-contain"
+                  />
+                )}
                 {/* White outline/stroke effect */}
-                <div className="ml-32">
+                <div className={isMobile ? '' : isTablet ? 'ml-20' : 'ml-32'}>
                   <img
                     src={getTeamWordmark(gameData.awayTeam.displayName)}
                     alt={gameData.awayTeam.displayName}
-                    width={140}
-                    height={45}
+                    width={isMobile ? 60 : isTablet ? 100 : 140}
+                    height={isMobile ? 20 : isTablet ? 32 : 45}
                     className="object-contain"
                     style={{ 
                       filter: 'drop-shadow(0 0 2px white) drop-shadow(0 0 2px white) drop-shadow(0 0 3px white) drop-shadow(0 0 4px white) drop-shadow(0 0 5px white)' 
@@ -122,13 +136,13 @@ export function BoardView({ board, gameData, potentialWinner, onModalStateChange
               </div>
               {/* Score overlapping - right side */}
               <div 
-                className="absolute right-6 bottom-0 transform translate-y-1/3 z-10"
+                className={`absolute ${isMobile ? 'right-2' : 'right-6'} bottom-0 transform translate-y-1/3 z-10`}
               >
                 <div 
-                  className="text-6xl font-black text-white bg-black/30 px-4 py-2 rounded-lg"
+                  className={`${isMobile ? 'text-3xl px-2 py-1' : isTablet ? 'text-4xl px-3 py-1' : 'text-6xl px-4 py-2'} font-black text-white bg-black/30 rounded-lg`}
                   style={{ 
                     textShadow: '0 0 3px black, 0 0 5px black, 0 0 8px black, 0 0 3px white, 0 2px 10px rgba(0,0,0,0.8)',
-                    WebkitTextStroke: '2px black'
+                    WebkitTextStroke: isMobile ? '1px black' : '2px black'
                   }}
                 >
                   {gameData.awayTeam.score}
@@ -145,67 +159,84 @@ export function BoardView({ board, gameData, potentialWinner, onModalStateChange
             >
               {/* Score overlapping - left side */}
               <div 
-                className="absolute left-6 bottom-0 transform translate-y-1/3 z-10"
+                className={`absolute ${isMobile ? 'left-2' : 'left-6'} bottom-0 transform translate-y-1/3 z-10`}
               >
                 <div 
-                  className="text-6xl font-black text-white bg-black/30 px-4 py-2 rounded-lg"
+                  className={`${isMobile ? 'text-3xl px-2 py-1' : isTablet ? 'text-4xl px-3 py-1' : 'text-6xl px-4 py-2'} font-black text-white bg-black/30 rounded-lg`}
                   style={{ 
                     textShadow: '0 0 3px black, 0 0 5px black, 0 0 8px black, 0 0 3px white, 0 2px 10px rgba(0,0,0,0.8)',
-                    WebkitTextStroke: '2px black'
+                    WebkitTextStroke: isMobile ? '1px black' : '2px black'
                   }}
                 >
                   {gameData.homeTeam.score}
                 </div>
               </div>
-              <div className="flex items-center gap-8">
+              <div className="flex items-center gap-2 md:gap-8">
                 {/* White outline/stroke effect */}
-                <div className="mr-32">
+                <div className={isMobile ? '' : isTablet ? 'mr-20' : 'mr-32'}>
                   <img
                     src={getTeamWordmark(gameData.homeTeam.displayName)}
                     alt={gameData.homeTeam.displayName}
-                    width={140}
-                    height={45}
+                    width={isMobile ? 60 : isTablet ? 100 : 140}
+                    height={isMobile ? 20 : isTablet ? 32 : 45}
                     className="object-contain"
                     style={{ 
                       filter: 'drop-shadow(0 0 2px white) drop-shadow(0 0 2px white) drop-shadow(0 0 3px white) drop-shadow(0 0 4px white) drop-shadow(0 0 5px white)' 
                     }}
                   />
                 </div>
+                {/* Logo for mobile */}
+                {isMobile && (
+                  <img
+                    src={getTeamLogo(gameData.homeTeam.displayName)}
+                    alt={gameData.homeTeam.displayName}
+                    width={40}
+                    height={40}
+                    className="object-contain"
+                  />
+                )}
               </div>
               {/* Large Logo Overlapping */}
-              <div className="absolute right-8 bottom-0 transform translate-y-1/4 z-10">
-                <img
-                  src={getTeamLogo(gameData.homeTeam.displayName)}
-                  alt={gameData.homeTeam.displayName}
-                  width={120}
-                  height={120}
-                  className="object-contain drop-shadow-2xl"
-                  style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}
-                />
-              </div>
+              {!isMobile && (
+                <div className={`absolute ${isTablet ? 'right-4' : 'right-8'} bottom-0 transform translate-y-1/4 z-10`}>
+                  <img
+                    src={getTeamLogo(gameData.homeTeam.displayName)}
+                    alt={gameData.homeTeam.displayName}
+                    width={isTablet ? 80 : 120}
+                    height={isTablet ? 80 : 120}
+                    className="object-contain drop-shadow-2xl"
+                    style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))' }}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
           {/* Grid Area with Team Labels */}
-          <div className="flex-1 flex items-center justify-center p-4">
+          <div className={`flex-1 flex items-center justify-center ${isMobile ? 'p-2' : 'p-4'}`}>
             <div className="flex flex-col">
               {/* Horizontal Team Bar (Home Team - Right Above Grid) */}
               <div className="flex">
                 {/* Empty space to align with vertical bar */}
-                <div style={{ width: '50px', height: '50px' }}></div>
+                <div style={{ width: isMobile ? '30px' : isTablet ? '40px' : '50px', height: isMobile ? '30px' : isTablet ? '40px' : '50px' }}></div>
                 <div 
                   className="flex items-center justify-center"
-                  style={{ backgroundColor: homeColors.primary, width: '640px', height: '50px' }}
+                  style={{ 
+                    backgroundColor: homeColors.primary, 
+                    width: isMobile ? 'calc(100vw - 64px)' : isTablet ? '480px' : '640px',
+                    maxWidth: isMobile ? '360px' : isTablet ? '480px' : '640px',
+                    height: isMobile ? '30px' : isTablet ? '40px' : '50px'
+                  }}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 md:gap-2">
                     <img
                       src={getTeamLogo(gameData.homeTeam.displayName)}
                       alt={gameData.homeTeam.displayName}
-                      width={35}
-                      height={35}
+                      width={isMobile ? 20 : isTablet ? 28 : 35}
+                      height={isMobile ? 20 : isTablet ? 28 : 35}
                     />
-                    <div className="text-base font-bold text-white tracking-wide">
-                      {gameData.homeTeam.displayName.toUpperCase()}
+                    <div className={`${isMobile ? 'text-xs' : isTablet ? 'text-sm' : 'text-base'} font-bold text-white tracking-wide`}>
+                      {isMobile ? gameData.homeTeam.abbreviation : gameData.homeTeam.displayName.toUpperCase()}
                     </div>
                   </div>
                 </div>
@@ -216,17 +247,30 @@ export function BoardView({ board, gameData, potentialWinner, onModalStateChange
                 {/* Vertical Team Label (Left of Grid) */}
                 <div 
                   className="flex items-center justify-center"
-                  style={{ backgroundColor: awayColors.primary, height: '640px', width: '50px' }}
+                  style={{ 
+                    backgroundColor: awayColors.primary, 
+                    height: isMobile ? 'calc(100vw - 64px)' : isTablet ? '480px' : '640px',
+                    maxHeight: isMobile ? '360px' : isTablet ? '480px' : '640px',
+                    width: isMobile ? '30px' : isTablet ? '40px' : '50px'
+                  }}
                 >
-                  <div className="flex items-center gap-2" style={{ transform: 'rotate(-90deg)', width: '640px', height: '50px' }}>
+                  <div 
+                    className="flex items-center gap-1 md:gap-2" 
+                    style={{ 
+                      transform: 'rotate(-90deg)', 
+                      width: isMobile ? 'calc(100vw - 64px)' : isTablet ? '480px' : '640px',
+                      maxWidth: isMobile ? '360px' : isTablet ? '480px' : '640px',
+                      height: isMobile ? '30px' : isTablet ? '40px' : '50px'
+                    }}
+                  >
                     <img
                       src={getTeamLogo(gameData.awayTeam.displayName)}
                       alt={gameData.awayTeam.displayName}
-                      width={35}
-                      height={35}
+                      width={isMobile ? 20 : isTablet ? 28 : 35}
+                      height={isMobile ? 20 : isTablet ? 28 : 35}
                     />
-                    <div className="text-base font-bold text-white tracking-wide whitespace-nowrap">
-                      {gameData.awayTeam.displayName.toUpperCase()}
+                    <div className={`${isMobile ? 'text-xs' : isTablet ? 'text-sm' : 'text-base'} font-bold text-white tracking-wide whitespace-nowrap`}>
+                      {isMobile ? gameData.awayTeam.abbreviation : gameData.awayTeam.displayName.toUpperCase()}
                     </div>
                   </div>
                 </div>
@@ -261,10 +305,10 @@ export function BoardView({ board, gameData, potentialWinner, onModalStateChange
         </div>
 
         {/* Right: Info Panel */}
-        <div className="w-64 bg-card border-l border-border p-4 overflow-y-auto">
-          <div className="space-y-4">
+        <div className={`${isMobile ? 'w-full border-t' : 'w-64 border-l'} bg-card border-border p-4 overflow-y-auto ${isMobile ? 'max-h-96' : ''}`}>
+          <div className={`${isMobile ? 'grid grid-cols-2 gap-4' : 'space-y-4'}`}>
             <div>
-              <h3 className="text-sm font-bold mb-2">Board Info</h3>
+              <h3 className="text-xs md:text-sm font-bold mb-2">Board Info</h3>
               <div className="text-xs space-y-1">
                 <div>Cost: {formatCurrency(board.costPerSquare)} per square</div>
                 <div>Status: <span className="capitalize">{board.status}</span></div>
@@ -273,7 +317,7 @@ export function BoardView({ board, gameData, potentialWinner, onModalStateChange
             </div>
 
             <div>
-              <h3 className="text-sm font-bold mb-2">Game Status</h3>
+              <h3 className="text-xs md:text-sm font-bold mb-2">Game Status</h3>
               <div className="text-xs space-y-1">
                 <div>Quarter: {gameData.status.period}</div>
                 <div>Clock: {gameData.status.clock}</div>
@@ -281,8 +325,8 @@ export function BoardView({ board, gameData, potentialWinner, onModalStateChange
               </div>
             </div>
 
-            <div>
-              <h3 className="text-sm font-bold mb-2">Payouts</h3>
+            <div className={isMobile ? 'col-span-2' : ''}>
+              <h3 className="text-xs md:text-sm font-bold mb-2">Payouts</h3>
               <div className="text-xs space-y-1">
                 <div>Q1: {board.payoutQ1}% - {formatCurrency(totalPot * board.payoutQ1 / 100)}</div>
                 <div>Q2: {board.payoutQ2}% - {formatCurrency(totalPot * board.payoutQ2 / 100)}</div>
@@ -292,8 +336,8 @@ export function BoardView({ board, gameData, potentialWinner, onModalStateChange
             </div>
 
             {currentQuarterWinner && (
-              <div className="p-3 bg-primary/10 border border-primary rounded">
-                <h3 className="text-sm font-bold mb-1 text-primary">Current Winner</h3>
+              <div className={`p-3 bg-primary/10 border border-primary rounded ${isMobile ? 'col-span-2' : ''}`}>
+                <h3 className="text-xs md:text-sm font-bold mb-1 text-primary">Current Winner</h3>
                 <div className="text-xs">
                   <div className="font-bold">{currentQuarterWinner.playerName}</div>
                   <div>Q{currentQuarterWinner.quarter}</div>
@@ -303,8 +347,8 @@ export function BoardView({ board, gameData, potentialWinner, onModalStateChange
             )}
 
             {board.winners.length > 0 && (
-              <div>
-                <h3 className="text-sm font-bold mb-2">All Winners</h3>
+              <div className={isMobile ? 'col-span-2' : ''}>
+                <h3 className="text-xs md:text-sm font-bold mb-2">All Winners</h3>
                 <div className="space-y-2">
                   {board.winners.map((winner) => (
                     <div

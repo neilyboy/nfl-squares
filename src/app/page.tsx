@@ -10,6 +10,7 @@ import { PinEntryDialog } from '@/components/pin-entry-dialog';
 import { ChevronLeft, ChevronRight, ShoppingCart, Lock } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { calculateTotalPot, getLastDigit } from '@/lib/utils';
+import { useResponsive } from '@/lib/use-responsive';
 
 interface Board {
   id: string;
@@ -64,6 +65,7 @@ export default function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const { isMobile } = useResponsive();
 
   useEffect(() => {
     checkSetup();
@@ -225,30 +227,30 @@ export default function HomePage() {
     <div className="relative h-screen w-screen overflow-hidden">
       {/* Board Navigation Overlay (if multiple boards) - Bottom Left */}
       {boards.length > 1 && (
-        <div className="absolute bottom-16 left-4 z-50">
-          <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg px-3 py-2 shadow-lg">
-            <div className="flex items-center gap-2">
+        <div className="absolute bottom-2 left-2 md:bottom-16 md:left-4 z-50">
+          <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg px-2 md:px-3 py-1 md:py-2 shadow-lg">
+            <div className="flex items-center gap-1 md:gap-2">
               <Button
                 variant="ghost"
-                size="sm"
+                size={isMobile ? "icon" : "sm"}
                 onClick={handlePrevBoard}
-                className="gap-1 h-8"
+                className={isMobile ? "h-8 w-8" : "gap-1 h-8"}
               >
                 <ChevronLeft className="w-4 h-4" />
-                Prev
+                {!isMobile && "Prev"}
               </Button>
-              <div className="text-center px-2">
+              <div className="text-center px-1 md:px-2">
                 <div className="text-xs text-muted-foreground whitespace-nowrap">
-                  Board {currentBoardIndex + 1} of {boards.length}
+                  {isMobile ? `${currentBoardIndex + 1}/${boards.length}` : `Board ${currentBoardIndex + 1} of ${boards.length}`}
                 </div>
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size={isMobile ? "icon" : "sm"}
                 onClick={handleNextBoard}
-                className="gap-1 h-8"
+                className={isMobile ? "h-8 w-8" : "gap-1 h-8"}
               >
-                Next
+                {!isMobile && "Next"}
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
@@ -256,24 +258,24 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Admin & Buy Square Buttons - Bottom Center Left */}
-      <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 md:left-auto md:right-72 md:transform-none z-50 flex gap-2">
+      {/* Admin & Buy Square Buttons - Bottom Center */}
+      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 md:bottom-16 md:left-auto md:right-72 md:transform-none z-50 flex gap-1 md:gap-2">
         <Button
-          size="lg"
+          size={isMobile ? "default" : "lg"}
           onClick={() => router.push('/buy')}
-          className="gap-2"
+          className={isMobile ? "gap-1 text-sm px-3" : "gap-2"}
           disabled={currentBoard.status !== 'open'}
         >
-          <ShoppingCart className="w-5 h-5" />
-          Buy Square
+          <ShoppingCart className={isMobile ? "w-4 h-4" : "w-5 h-5"} />
+          Buy {isMobile ? "" : "Square"}
         </Button>
         <Button
-          size="lg"
+          size={isMobile ? "default" : "lg"}
           variant="outline"
           onClick={() => setShowAdminDialog(true)}
-          className="gap-2"
+          className={isMobile ? "gap-1 text-sm px-3" : "gap-2"}
         >
-          <Lock className="w-5 h-5" />
+          <Lock className={isMobile ? "w-4 h-4" : "w-5 h-5"} />
           Admin
         </Button>
       </div>

@@ -11,7 +11,8 @@ import { SquaresGrid } from '@/components/squares-grid';
 import { QRCodeDisplay } from '@/components/qr-code-display';
 import { OnScreenKeyboard } from '@/components/on-screen-keyboard';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, Wallet } from 'lucide-react';
+import { ArrowLeft, Wallet, Keyboard } from 'lucide-react';
+import { useResponsive } from '@/lib/use-responsive';
 import {
   Dialog,
   DialogContent,
@@ -54,6 +55,7 @@ export default function BuyPage() {
   const nameInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { toast } = useToast();
+  const { isMobile } = useResponsive();
 
   useEffect(() => {
     fetchBoards();
@@ -264,7 +266,7 @@ export default function BuyPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col p-4">
+    <div className="min-h-screen flex flex-col p-2 md:p-4">
       <div className="container mx-auto max-w-6xl">
         <Button
           variant="outline"
@@ -283,14 +285,14 @@ export default function BuyPage() {
           Back
         </Button>
 
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">{selectedBoard.name}</h1>
-          <p className="text-muted-foreground">
+        <div className="mb-4 md:mb-6">
+          <h1 className="text-xl md:text-3xl font-bold mb-2">{selectedBoard.name}</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
             Select one or more available squares and enter your name
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-[1fr_auto] gap-6">
+        <div className="grid lg:grid-cols-[1fr_auto] gap-4 md:gap-6">
           {/* Grid */}
           <div>
             <SquaresGrid
@@ -302,8 +304,8 @@ export default function BuyPage() {
           </div>
 
           {/* Form */}
-          <div className="lg:w-80 space-y-6">
-            <div className="bg-card border border-border rounded-lg p-6 space-y-4">
+          <div className="lg:w-80 space-y-4 md:space-y-6">
+            <div className="bg-card border border-border rounded-lg p-4 md:p-6 space-y-4">
               <div>
                 <Label htmlFor="name">Your Name</Label>
                 <Input
@@ -311,18 +313,17 @@ export default function BuyPage() {
                   id="name"
                   value={playerName}
                   onChange={(e) => setPlayerName(e.target.value)}
-                  onFocus={() => setShowKeyboard(true)}
                   placeholder="Enter your name"
                   maxLength={20}
                 />
               </div>
 
               {selectedSquares.length > 0 && (
-                <div className="p-4 bg-primary/10 rounded-lg">
+                <div className="p-3 md:p-4 bg-primary/10 rounded-lg">
                   <div className="text-sm text-muted-foreground mb-1">
                     Selected Squares
                   </div>
-                  <div className="text-2xl font-bold">
+                  <div className="text-xl md:text-2xl font-bold">
                     {selectedSquares.length} {selectedSquares.length === 1 ? 'square' : 'squares'}
                   </div>
                   {selectedSquares.length <= 5 && (
@@ -335,8 +336,8 @@ export default function BuyPage() {
                 </div>
               )}
 
-              <div className="pt-4 border-t border-border">
-                <div className="space-y-2 mb-4">
+              <div className="pt-3 md:pt-4 border-t border-border">
+                <div className="space-y-2 mb-3 md:mb-4">
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted-foreground">Per Square:</span>
                     <span className="font-medium">
@@ -351,28 +352,40 @@ export default function BuyPage() {
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t">
                     <span className="text-muted-foreground font-semibold">Total:</span>
-                    <span className="text-2xl font-bold text-primary">
+                    <span className="text-xl md:text-2xl font-bold text-primary">
                       ${getTotalCost().toFixed(2)}
                     </span>
                   </div>
                 </div>
 
-                <Button
-                  onClick={handleContinue}
-                  disabled={!playerName.trim() || selectedSquares.length === 0}
-                  className="w-full"
-                  size="lg"
-                >
-                  <Wallet className="w-4 h-4 mr-2" />
-                  Continue to Payment
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowKeyboard(!showKeyboard)}
+                    className="flex-1"
+                    size={isMobile ? "default" : "lg"}
+                  >
+                    <Keyboard className="w-4 h-4 mr-2" />
+                    {showKeyboard ? 'Hide' : 'Show'} Keyboard
+                  </Button>
+                  <Button
+                    onClick={handleContinue}
+                    disabled={!playerName.trim() || selectedSquares.length === 0}
+                    className="flex-1"
+                    size={isMobile ? "default" : "lg"}
+                  >
+                    <Wallet className="w-4 h-4 mr-2" />
+                    Continue
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {showKeyboard && (
-          <div className="fixed bottom-0 left-0 right-0 z-50">
+          <div className="mt-4">
             <OnScreenKeyboard
               inputRef={nameInputRef}
               onChange={(input) => setPlayerName(input)}
@@ -383,10 +396,10 @@ export default function BuyPage() {
 
       {/* Payment Dialog */}
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Select Payment Method</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-lg md:text-xl">Select Payment Method</DialogTitle>
+            <DialogDescription className="text-sm">
               Choose how you'd like to pay for your {selectedSquares.length} {selectedSquares.length === 1 ? 'square' : 'squares'} (${getTotalCost().toFixed(2)} total)
             </DialogDescription>
           </DialogHeader>
@@ -404,7 +417,7 @@ export default function BuyPage() {
                   onClick={() => handlePayment('paypal')}
                   disabled={loading}
                   className="mt-4 w-full"
-                  size="lg"
+                  size={isMobile ? "default" : "lg"}
                 >
                   {loading ? 'Processing...' : 'I Paid via PayPal'}
                 </Button>
@@ -423,7 +436,7 @@ export default function BuyPage() {
                   onClick={() => handlePayment('venmo')}
                   disabled={loading}
                   className="mt-4 w-full"
-                  size="lg"
+                  size={isMobile ? "default" : "lg"}
                 >
                   {loading ? 'Processing...' : 'I Paid via Venmo'}
                 </Button>
@@ -431,7 +444,7 @@ export default function BuyPage() {
             )}
 
             {selectedBoard.paymentConfig.allowCash && (
-              <div className="text-center p-6 bg-secondary rounded-lg">
+              <div className="text-center p-4 md:p-6 bg-secondary rounded-lg">
                 <div className="text-4xl mb-4">💵</div>
                 <h3 className="text-lg font-semibold mb-2">Cash Payment</h3>
                 <p className="text-sm text-muted-foreground mb-4">
@@ -441,7 +454,7 @@ export default function BuyPage() {
                   onClick={() => handlePayment('cash')}
                   disabled={loading}
                   className="w-full"
-                  size="lg"
+                  size={isMobile ? "default" : "lg"}
                 >
                   {loading ? 'Processing...' : 'I Will Pay Cash'}
                 </Button>
