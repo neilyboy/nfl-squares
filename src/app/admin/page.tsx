@@ -55,31 +55,18 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleBackup = async () => {
-    try {
-      const response = await fetch('/api/backup');
-      const data = await response.json();
-      
-      const blob = new Blob([JSON.stringify(data, null, 2)], {
-        type: 'application/json',
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `nfl-squares-backup-${new Date().toISOString()}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Backup error:', error);
-    }
+  const handleBackup = () => {
+    // Direct download via server headers
+    window.location.href = '/api/backup';
   };
 
   const handleRestore = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'application/json';
+    
     input.onchange = async (e: any) => {
-      const file = e.target.files[0];
+      const file = e.target?.files?.[0];
       if (!file) return;
 
       try {
@@ -103,6 +90,7 @@ export default function AdminDashboard() {
         alert('Failed to restore backup');
       }
     };
+    
     input.click();
   };
 

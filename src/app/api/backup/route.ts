@@ -27,7 +27,17 @@ export async function GET() {
       },
     };
 
-    return NextResponse.json(backup);
+    const filename = `nfl-squares-backup-${new Date().toISOString().replace(/:/g, '-')}.json`;
+    const jsonContent = JSON.stringify(backup, null, 2);
+
+    return new NextResponse(jsonContent, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Cache-Control': 'no-cache',
+      },
+    });
   } catch (error) {
     console.error('Backup error:', error);
     return NextResponse.json(
