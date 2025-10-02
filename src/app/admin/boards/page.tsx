@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import {
   ArrowLeft,
-  Edit,
   Trash2,
   CheckCircle,
   Archive,
@@ -247,15 +246,6 @@ export default function ManageBoardsPage() {
                   >
                     <Eye className="w-4 h-4 mr-2" />
                     View Details
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => router.push(`/admin/boards/${board.id}/edit`)}
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit
                   </Button>
 
                   {!board.isFinalized && board.status === 'open' && (

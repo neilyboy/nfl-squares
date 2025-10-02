@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { SquaresGrid } from '@/components/squares-grid';
 import { WinnersDisplay } from '@/components/winners-display';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, Trash2, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Trash2, CheckCircle, CheckCheck } from 'lucide-react';
 import Image from 'next/image';
 
 interface Board {
@@ -117,6 +117,88 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     }
   };
 
+  const handleMarkAllPaid = async () => {
+    if (!board) return;
+    
+    const unpaidSquares = board.squares.filter(s => s.playerName && !s.isPaid);
+    
+    if (unpaidSquares.length === 0) {
+      toast({
+        title: 'No Action Needed',
+        description: 'All squares are already paid',
+      });
+      return;
+    }
+
+    if (!confirm(`Mark all ${unpaidSquares.length} unpaid squares as paid?`)) return;
+
+    try {
+      const promises = unpaidSquares.map(square => 
+        fetch(`/api/squares/${square.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isPaid: true }),
+        })
+      );
+
+      await Promise.all(promises);
+
+      toast({
+        title: 'Success',
+        description: `Marked ${unpaidSquares.length} squares as paid`,
+      });
+      fetchBoard();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update payment statuses',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleMarkPlayerPaid = async (playerName: string) => {
+    if (!board) return;
+    
+    const playerUnpaidSquares = board.squares.filter(
+      s => s.playerName === playerName && !s.isPaid
+    );
+    
+    if (playerUnpaidSquares.length === 0) {
+      toast({
+        title: 'No Action Needed',
+        description: `All squares for ${playerName} are already paid`,
+      });
+      return;
+    }
+
+    if (!confirm(`Mark all ${playerUnpaidSquares.length} unpaid squares for ${playerName} as paid?`)) return;
+
+    try {
+      const promises = playerUnpaidSquares.map(square => 
+        fetch(`/api/squares/${square.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isPaid: true }),
+        })
+      );
+
+      await Promise.all(promises);
+
+      toast({
+        title: 'Success',
+        description: `Marked ${playerUnpaidSquares.length} squares for ${playerName} as paid`,
+      });
+      fetchBoard();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update payment statuses',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -206,7 +288,18 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
 
         {/* Square Details */}
         <div className="bg-card border border-border rounded-lg p-6">
-          <h2 className="text-2xl font-bold mb-4">Square Details</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold">Square Details</h2>
+            {filledSquares.length > 0 && (
+              <Button
+                variant="default"
+                onClick={handleMarkAllPaid}
+              >
+                <CheckCheck className="w-4 h-4 mr-2" />
+                Mark All Paid
+              </Button>
+            )}
+          </div>
           
           {filledSquares.length === 0 ? (
             <p className="text-muted-foreground">No squares have been filled yet</p>
@@ -228,7 +321,22 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                       <td className="p-2">
                         [{square.row}, {square.col}]
                       </td>
-                      <td className="p-2 font-semibold">{square.playerName}</td>
+                      <td className="p-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">{square.playerName}</span>
+                          {board.squares.filter(s => s.playerName === square.playerName && !s.isPaid).length > 1 && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 px-2 text-xs"
+                              onClick={() => handleMarkPlayerPaid(square.playerName)}
+                            >
+                              <CheckCheck className="w-3 h-3 mr-1" />
+                              Mark All
+                            </Button>
+                          )}
+                        </div>
+                      </td>
                       <td className="p-2">
                         {square.paymentMethod === 'paypal' && (
                           <Image

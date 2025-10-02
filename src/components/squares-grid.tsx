@@ -19,6 +19,7 @@ interface SquaresGridProps {
   showNumbers?: boolean;
   onSquareClick?: (row: number, col: number) => void;
   highlightSquare?: { row: number; col: number } | null;
+  highlightSquares?: Array<{ row: number; col: number }>;
   winningSquare?: { row: number; col: number } | null;
   potentialWinningSquare?: { row: number; col: number } | null;
   readOnly?: boolean;
@@ -36,6 +37,7 @@ export function SquaresGrid({
   showNumbers = false,
   onSquareClick,
   highlightSquare,
+  highlightSquares = [],
   winningSquare,
   potentialWinningSquare,
   readOnly = false,
@@ -79,7 +81,12 @@ export function SquaresGrid({
     );
   };
   const isHighlightedSquare = (row: number, col: number): boolean => {
-    return highlightSquare?.row === row && highlightSquare?.col === col;
+    // Check single highlight first (for backward compatibility)
+    if (highlightSquare?.row === row && highlightSquare?.col === col) {
+      return true;
+    }
+    // Check multiple highlights
+    return highlightSquares.some(s => s.row === row && s.col === col);
   };
 
   const handleSquareClick = (row: number, col: number) => {

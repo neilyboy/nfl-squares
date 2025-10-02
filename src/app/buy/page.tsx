@@ -44,7 +44,7 @@ interface Board {
 export default function BuyPage() {
   const [boards, setBoards] = useState<Board[]>([]);
   const [selectedBoard, setSelectedBoard] = useState<Board | null>(null);
-  const [selectedSquare, setSelectedSquare] = useState<{ row: number; col: number } | null>(null);
+  const [selectedSquares, setSelectedSquares] = useState<Array<{ row: number; col: number }>>([]);
   const [playerName, setPlayerName] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<string>('');
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -79,7 +79,17 @@ export default function BuyPage() {
   };
 
   const handleSquareClick = (row: number, col: number) => {
-    setSelectedSquare({ row, col });
+    // Toggle square selection
+    setSelectedSquares((prev) => {
+      const exists = prev.find((s) => s.row === row && s.col === col);
+      if (exists) {
+        // Remove from selection
+        return prev.filter((s) => !(s.row === row && s.col === col));
+      } else {
+        // Add to selection
+        return [...prev, { row, col }];
+      }
+    });
   };
 
   const handleContinue = () => {
@@ -92,10 +102,10 @@ export default function BuyPage() {
       return;
     }
 
-    if (!selectedSquare) {
+    if (selectedSquares.length === 0) {
       toast({
         title: 'Square Required',
-        description: 'Please select a square',
+        description: 'Please select at least one square',
         variant: 'destructive',
       });
       return;
@@ -105,54 +115,68 @@ export default function BuyPage() {
   };
 
   const handlePayment = async (method: string) => {
-    if (!selectedBoard || !selectedSquare) return;
+    if (!selectedBoard || selectedSquares.length === 0) return;
 
     setLoading(true);
 
     try {
-      const response = await fetch('/api/squares', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          boardId: selectedBoard.id,
-          row: selectedSquare.row,
-          col: selectedSquare.col,
-          playerName: playerName.trim(),
-          paymentMethod: method,
-        }),
-      });
+      // Create all squares in sequence
+      const results = [];
+      let failedSquares = [];
+      
+      for (const square of selectedSquares) {
+        const response = await fetch('/api/squares', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            boardId: selectedBoard.id,
+            row: square.row,
+            col: square.col,
+            playerName: playerName.trim(),
+            paymentMethod: method,
+          }),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
+        
+        if (response.ok) {
+          results.push(data);
+        } else {
+          failedSquares.push(`Row ${square.row}, Col ${square.col}`);
+        }
+      }
 
-      if (response.ok) {
+      if (results.length > 0) {
+        const squareText = results.length === 1 ? 'square' : 'squares';
         toast({
           title: 'Success',
-          description: 'Square claimed successfully!',
+          description: `${results.length} ${squareText} claimed successfully!`,
         });
-        router.push('/');
-      } else {
-        if (response.status === 409) {
+        
+        if (failedSquares.length > 0) {
           toast({
-            title: 'Square Taken',
-            description: data.error || 'This square has already been claimed',
-            variant: 'destructive',
-          });
-          // Refresh boards to show updated state
-          fetchBoards();
-          setSelectedSquare(null);
-          setShowPaymentDialog(false);
-        } else {
-          toast({
-            title: 'Error',
-            description: data.error || 'Failed to claim square',
+            title: 'Some Squares Failed',
+            description: `The following squares were already taken: ${failedSquares.join(', ')}`,
             variant: 'destructive',
           });
         }
+        
+        router.push('/');
+      } else {
+        toast({
+          title: 'Failed',
+          description: 'All selected squares were already taken. Please try different squares.',
+          variant: 'destructive',
+        });
+        // Refresh boards to show updated state
+        fetchBoards();
+        setSelectedSquares([]);
+        setShowPaymentDialog(false);
       }
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to claim square',
+        description: 'Failed to claim squares',
         variant: 'destructive',
       });
     } finally {
@@ -160,13 +184,19 @@ export default function BuyPage() {
     }
   };
 
+  const getTotalCost = () => {
+    if (!selectedBoard) return 0;
+    return selectedBoard.costPerSquare * selectedSquares.length;
+  };
+
   const getPaymentUrl = (method: string) => {
     if (!selectedBoard) return '';
     
     const config = selectedBoard.paymentConfig;
+    const totalCost = getTotalCost();
     
     if (method === 'paypal' && config.paypalUsername) {
-      return `https://www.paypal.com/paypalme/${config.paypalUsername}/${selectedBoard.costPerSquare}`;
+      return `https://www.paypal.com/paypalme/${config.paypalUsername}/${totalCost.toFixed(2)}`;
     } else if (method === 'venmo' && config.venmoUsername) {
       return `https://account.venmo.com/u/${config.venmoUsername}`;
     }
@@ -239,9 +269,9 @@ export default function BuyPage() {
         <Button
           variant="outline"
           onClick={() => {
-            if (selectedSquare || playerName) {
+            if (selectedSquares.length > 0 || playerName) {
               setSelectedBoard(null);
-              setSelectedSquare(null);
+              setSelectedSquares([]);
               setPlayerName('');
             } else {
               router.push('/');
@@ -256,7 +286,7 @@ export default function BuyPage() {
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">{selectedBoard.name}</h1>
           <p className="text-muted-foreground">
-            Select an available square and enter your name
+            Select one or more available squares and enter your name
           </p>
         </div>
 
@@ -266,7 +296,7 @@ export default function BuyPage() {
             <SquaresGrid
               squares={selectedBoard.squares}
               onSquareClick={handleSquareClick}
-              highlightSquare={selectedSquare}
+              highlightSquares={selectedSquares}
               showNumbers={false}
             />
           </div>
@@ -287,28 +317,49 @@ export default function BuyPage() {
                 />
               </div>
 
-              {selectedSquare && (
+              {selectedSquares.length > 0 && (
                 <div className="p-4 bg-primary/10 rounded-lg">
                   <div className="text-sm text-muted-foreground mb-1">
-                    Selected Square
+                    Selected Squares
                   </div>
                   <div className="text-2xl font-bold">
-                    Row {selectedSquare.row}, Col {selectedSquare.col}
+                    {selectedSquares.length} {selectedSquares.length === 1 ? 'square' : 'squares'}
                   </div>
+                  {selectedSquares.length <= 5 && (
+                    <div className="text-sm text-muted-foreground mt-2">
+                      {selectedSquares.map((s, i) => (
+                        <div key={i}>Row {s.row}, Col {s.col}</div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
               <div className="pt-4 border-t border-border">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-muted-foreground">Cost:</span>
-                  <span className="text-2xl font-bold text-primary">
-                    ${selectedBoard.costPerSquare.toFixed(2)}
-                  </span>
+                <div className="space-y-2 mb-4">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">Per Square:</span>
+                    <span className="font-medium">
+                      ${selectedBoard.costPerSquare.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">Quantity:</span>
+                    <span className="font-medium">
+                      {selectedSquares.length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2 border-t">
+                    <span className="text-muted-foreground font-semibold">Total:</span>
+                    <span className="text-2xl font-bold text-primary">
+                      ${getTotalCost().toFixed(2)}
+                    </span>
+                  </div>
                 </div>
 
                 <Button
                   onClick={handleContinue}
-                  disabled={!playerName.trim() || !selectedSquare}
+                  disabled={!playerName.trim() || selectedSquares.length === 0}
                   className="w-full"
                   size="lg"
                 >
@@ -336,7 +387,7 @@ export default function BuyPage() {
           <DialogHeader>
             <DialogTitle>Select Payment Method</DialogTitle>
             <DialogDescription>
-              Choose how you'd like to pay for your square
+              Choose how you'd like to pay for your {selectedSquares.length} {selectedSquares.length === 1 ? 'square' : 'squares'} (${getTotalCost().toFixed(2)} total)
             </DialogDescription>
           </DialogHeader>
 
@@ -384,7 +435,7 @@ export default function BuyPage() {
                 <div className="text-4xl mb-4">💵</div>
                 <h3 className="text-lg font-semibold mb-2">Cash Payment</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Please pay ${selectedBoard.costPerSquare.toFixed(2)} in cash to the admin
+                  Please pay ${getTotalCost().toFixed(2)} in cash to the admin
                 </p>
                 <Button
                   onClick={() => handlePayment('cash')}
