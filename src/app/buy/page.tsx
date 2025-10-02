@@ -358,27 +358,26 @@ export default function BuyPage() {
                   </div>
                 </div>
 
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowKeyboard(!showKeyboard)}
-                    className="flex-1"
-                    size={isMobile ? "default" : "lg"}
-                  >
-                    <Keyboard className="w-4 h-4 mr-2" />
-                    {showKeyboard ? 'Hide' : 'Show'} Keyboard
-                  </Button>
-                  <Button
-                    onClick={handleContinue}
-                    disabled={!playerName.trim() || selectedSquares.length === 0}
-                    className="flex-1"
-                    size={isMobile ? "default" : "lg"}
-                  >
-                    <Wallet className="w-4 h-4 mr-2" />
-                    Continue
-                  </Button>
-                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowKeyboard(!showKeyboard)}
+                  className="w-full mb-2"
+                  size={isMobile ? "default" : "lg"}
+                >
+                  <Keyboard className="w-4 h-4 mr-2" />
+                  {showKeyboard ? 'Hide' : 'Show'} Keyboard
+                </Button>
+
+                <Button
+                  onClick={handleContinue}
+                  disabled={!playerName.trim() || selectedSquares.length === 0}
+                  className="w-full"
+                  size={isMobile ? "default" : "lg"}
+                >
+                  <Wallet className="w-4 h-4 mr-2" />
+                  Continue to Payment
+                </Button>
               </div>
             </div>
           </div>
