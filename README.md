@@ -12,6 +12,7 @@ A modern, touch-screen friendly web application for managing NFL squares boards 
 ### For Users
 - **Professional TV-Style Display**: Broadcast-quality scorebug with team logos, wordmarks, and gradient backgrounds
 - **Touch-Screen Optimized**: Full on-screen keyboard support for kiosks and touch devices
+- **Multiple Square Selection**: Click multiple squares to buy them all at once with one payment
 - **Multiple Boards**: Support for multiple simultaneous boards (main board, kids board, etc.)
 - **Smart Auto-Cycling**: Boards automatically rotate on display (pauses when viewing square details)
 - **Player Initials Display**: Quick view of who owns each square with clickable details
@@ -22,11 +23,13 @@ A modern, touch-screen friendly web application for managing NFL squares boards 
 
 ### For Admins
 - **Secure Admin Area**: PIN-protected with password recovery
-- **Board Management**: Create, edit, delete, and archive boards
+- **Board Management**: Create, view details, delete, and archive boards
 - **Game Selection**: Choose from upcoming NFL games via ESPN API
 - **Flexible Payouts**: Customize payout percentages for each quarter (Q1-Q4)
 - **Payment Method Control**: Enable/disable PayPal, Venmo, or Cash per board
 - **Payment Tracking**: Monitor which squares are paid/unpaid with visual indicators
+- **Bulk Payment Marking**: Mark all unpaid squares as paid with one click
+- **Per-Player Bulk Actions**: Mark all squares for a specific player as paid at once
 - **Board Finalization**: Reveal randomized numbers when ready
 - **Backup/Restore**: Export and import all data as JSON
 - **On-Screen Keyboard Toggle**: Optional keyboard for touch-screen admins
@@ -156,11 +159,15 @@ A modern, touch-screen friendly web application for managing NFL squares boards 
 
 1. On the main screen, click **Buy Square**
 2. Select which board (if multiple)
-3. Click an available square
-4. Enter your name (on-screen keyboard will appear)
+3. **Click one or more available squares** to select them
+   - Click a square to select it (highlighted)
+   - Click again to deselect
+   - Total cost updates automatically
+4. Enter your name (on-screen keyboard available)
 5. Click **Continue to Payment**
 6. Choose payment method and scan QR code or mark as paid
-7. Your square is now reserved!
+   - Payment amount includes all selected squares
+7. All your squares are now reserved with one purchase!
 
 ### Finalizing a Board
 
@@ -182,8 +189,11 @@ A modern, touch-screen friendly web application for managing NFL squares boards 
 1. Go to **Admin → Manage Boards**
 2. Click **View Details** on a board
 3. You'll see all filled squares with payment status
-4. Mark squares as paid/unpaid
-5. Delete squares if payment fails
+4. **Individual marking**: Click "Mark Paid" or "Mark Unpaid" for each square
+5. **Bulk marking options**:
+   - Click **"Mark All Paid"** button (top right) to mark ALL unpaid squares at once
+   - Click **"Mark All"** next to a player's name to mark all their unpaid squares
+6. Delete squares if payment fails or needs to be refunded
 
 ### Backup and Restore
 
