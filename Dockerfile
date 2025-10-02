@@ -78,4 +78,4 @@ ENV DATABASE_URL="file:/app/data/nfl-squares.db"
 
 # Initialize database on first run and start app
 # Run as root to handle volume permissions
-CMD ["/bin/sh", "-c", "chown -R nextjs:nodejs /app/data && chmod 777 /app/data && npx prisma migrate deploy && npm start"]
+CMD ["/bin/sh", "-c", "chown -R nextjs:nodejs /app/data && chmod 777 /app/data && npx prisma db push --accept-data-loss && npm start"]
